@@ -10,12 +10,11 @@ use PhpAmqpLib\Wire\AMQPTable;
 
 class RabbitMQ
 {
-
-    private $host = '127.0.0.1';
-    private $port = 5672;
-    private $user = 'guest';
-    private $password = 'guest';
-    private $vhost = '/';
+    protected $host = '127.0.0.1';
+    protected $port = 5672;
+    protected $user = 'guest';
+    protected $password = 'guest';
+    protected $vhost = '/';
     protected $connection;
     protected $channel;
 
