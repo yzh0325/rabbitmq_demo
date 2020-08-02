@@ -1,0 +1,20 @@
+{
+  "name": "yzh0325/rabbitmq",
+  "description": "RabbitMQ using demo for php-amqplib",
+  "license": "proprietary",
+  "type": "library",
+  "authors": [
+    {
+      "name": "zhihao Yan",
+      "email": "zhihaoyan@npn.sg"
+    }
+  ],
+  "require": {
+    "php-amqplib/php-amqplib": "^2.11"
+  },
+  "autoload": {
+    "psr-4": {
+      "RabbitMQ\\": "src"
+    }
+  }
+}
