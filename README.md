@@ -1,7 +1,7 @@
 # php使用RabbitMQ的example
 
-# 加载rabbitmq的composer包
-composer require php-amqplib/php-amqplib
+# 安装组件
+composer require yzh0325/rabbitmq
 
 # 目录说明
 ## Alone 目录
