@@ -15,6 +15,7 @@ class RabbitMQ
     private $port = 5672;
     private $user = 'guest';
     private $password = 'guest';
+    private $vhost = '/';
     protected $connection;
     protected $channel;
 
@@ -24,8 +25,16 @@ class RabbitMQ
      */
     public function __construct()
     {
-        $this->connection = new AMQPStreamConnection($this->host, $this->port, $this->user, $this->password);
-        $this->channel    = $this->connection->channel();
+        if(function_exists('config')){
+            $this->host = config('rabbitmq.host');
+            $this->port = config('rabbitmq.port');
+            $this->vhost = config('rabbitmq.vhost');
+            $this->user = config('rabbitmq.login');
+            $this->password = config('rabbitmq.password');
+        }
+
+        $this->connection = new AMQPStreamConnection($this->host, $this->port, $this->user, $this->password,$this->vhost);
+        $this->channel = $this->connection->channel();
     }
 
     /**
@@ -59,6 +68,7 @@ class RabbitMQ
     {
         $this->channel->queue_declare($queueName, $pasive, $durable, $exlusive, $autoDelete, $nowait, $arguments);
     }
+
     /**
      * 创建延时队列
      * @param $ttl
@@ -66,10 +76,11 @@ class RabbitMQ
      * @param $delayQueueName
      * @param $queueName
      */
-    public function createDelayQueue($ttl, $delayExName, $delayQueueName, $queueName){
+    public function createDelayQueue($ttl, $delayExName, $delayQueueName, $queueName)
+    {
         $args = new AMQPTable([
-            'x-dead-letter-exchange'    => $delayExName,
-            'x-message-ttl'             => $ttl, //消息存活时间
+            'x-dead-letter-exchange' => $delayExName,
+            'x-message-ttl' => $ttl, //消息存活时间
             'x-dead-letter-routing-key' => $queueName
         ]);
         $this->channel->queue_declare($queueName, false, true, false, false, false, $args);
@@ -117,15 +128,15 @@ class RabbitMQ
      * @author: Yan
      * @dataTime: 2020/8/2 18:19
      */
-    public function publish($message, $routeKey, $exchange = '', $durable = true ,$properties = [])
+    public function publish($message, $routeKey, $exchange = '', $durable = true, $properties = [])
     {
         $property = [];
-        if($durable){
+        if ($durable) {
             $property = [
                 'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT //消息持久化，重启rabbitmq，消息不会丢失
             ];
         }
-        $properties = array_merge($property,$properties);
+        $properties = array_merge($property, $properties);
         $data = new AMQPMessage(
             $message, $properties
         );
@@ -154,7 +165,8 @@ class RabbitMQ
      * @author: Yan
      * @dataTime: 2020/8/2 18:24
      */
-    public function ack($msg){
+    public function ack($msg)
+    {
         $msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
     }
 
