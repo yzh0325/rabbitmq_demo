@@ -108,6 +108,31 @@ class RabbitMQ
     }
 
     /**
+     * @notes:发布消息
+     * @param $message
+     * @param $routeKey
+     * @param string $exchange
+     * @param bool $durable
+     * @param array $properties
+     * @author: Yan
+     * @dataTime: 2020/8/2 18:19
+     */
+    public function publish($message, $routeKey, $exchange = '', $durable = true ,$properties = [])
+    {
+        $property = [];
+        if($durable){
+            $property = [
+                'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT //消息持久化，重启rabbitmq，消息不会丢失
+            ];
+        }
+        $properties = array_merge($property,$properties);
+        $data = new AMQPMessage(
+            $message, $properties
+        );
+        $this->channel->basic_publish($data, $exchange, $routeKey);
+    }
+
+    /**
      * 消费消息
      * @param $queueName
      * @param $callback
@@ -121,6 +146,16 @@ class RabbitMQ
         while ($this->channel->is_consuming()) {
             $this->channel->wait();
         }
+    }
+
+    /**
+     * @notes:消息应答
+     * @param $msg
+     * @author: Yan
+     * @dataTime: 2020/8/2 18:24
+     */
+    public function ack($msg){
+        $msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
     }
 
     /**
