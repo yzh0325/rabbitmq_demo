@@ -50,22 +50,26 @@ class RabbitMQ
      * @param $pasive
      * @param $durable
      * @param $autoDelete
+     * @return mixed|null
      */
     public function createExchange($exchangeName, $type, $pasive = false, $durable = false, $autoDelete = false)
     {
-        $this->channel->exchange_declare($exchangeName, $type, $pasive, $durable, $autoDelete);
+        return $this->channel->exchange_declare($exchangeName, $type, $pasive, $durable, $autoDelete);
     }
 
     /**
-     * @param $queueName
-     * @param $pasive
-     * @param $durable
-     * @param $exlusive
-     * @param $autoDelete
+     * @param string $queueName
+     * @param bool $pasive
+     * @param bool $durable
+     * @param bool $exclusive
+     * @param bool $autoDelete
+     * @param bool $nowait
+     * @param array $arguments
+     * @return
      */
-    public function createQueue($queueName, $pasive = false, $durable = false, $exlusive = false, $autoDelete = false, $nowait = false, $arguments = [])
+    public function createQueue($queueName = '', $pasive = false, $durable = false, $exclusive = false, $autoDelete = false, $nowait = false, $arguments = [])
     {
-        $this->channel->queue_declare($queueName, $pasive, $durable, $exlusive, $autoDelete, $nowait, $arguments);
+        return $this->channel->queue_declare($queueName, $pasive, $durable, $exclusive, $autoDelete, $nowait, $arguments)[0];
     }
 
     /**
@@ -74,8 +78,9 @@ class RabbitMQ
      * @param $delayExName
      * @param $delayQueueName
      * @param $queueName
+     * @param string $delayExchangeType
      */
-    public function createDelayQueue($ttl, $delayExName, $delayQueueName, $queueName)
+    public function createDelayQueue($ttl, $delayExName, $delayQueueName, $queueName, $delayExchangeType = AMQPExchangeType::DIRECT )
     {
         $args = new AMQPTable([
             'x-dead-letter-exchange' => $delayExName,
@@ -84,7 +89,7 @@ class RabbitMQ
         ]);
         $this->channel->queue_declare($queueName, false, true, false, false, false, $args);
         //绑定死信queue
-        $this->channel->exchange_declare($delayExName, AMQPExchangeType::DIRECT, false, true, false);
+        $this->channel->exchange_declare($delayExName, $delayExchangeType, false, true, false);
         $this->channel->queue_declare($delayQueueName, false, true, false, false);
         $this->channel->queue_bind($delayQueueName, $delayExName, $queueName, false);
     }
@@ -96,18 +101,22 @@ class RabbitMQ
      * @param bool $nowait
      * @param array $arguments
      * @param null $ticket
+     * @return mixed|null
      */
     public function bindQueue($queue, $exchangeName, $routing_key = '',
                               $nowait = false,
                               $arguments = array(),
                               $ticket = null)
     {
-        $this->channel->queue_bind($queue, $exchangeName, $routing_key, $nowait, $arguments, $ticket);
+        return $this->channel->queue_bind($queue, $exchangeName, $routing_key, $nowait, $arguments, $ticket);
     }
 
     /**
      * 生成信息
      * @param $message
+     * @param $routeKey
+     * @param string $exchange
+     * @param array $properties
      */
     public function sendMessage($message, $routeKey, $exchange = '', $properties = [])
     {
@@ -127,7 +136,7 @@ class RabbitMQ
      * @author: Yan
      * @dataTime: 2020/8/2 18:19
      */
-    public function publish($message, $routeKey, $exchange = '', $durable = true, $properties = [])
+    public function publish($message, $routeKey = '', $exchange = '', $durable = true, $properties = [])
     {
         $property = [];
         if ($durable) {
@@ -146,6 +155,11 @@ class RabbitMQ
      * 消费消息
      * @param $queueName
      * @param $callback
+     * @param string $tag
+     * @param bool $noLocal
+     * @param bool $noAck
+     * @param bool $exclusive
+     * @param bool $noWait
      * @throws \ErrorException
      */
     public function consumeMessage($queueName, $callback, $tag = '', $noLocal = false, $noAck = false, $exclusive = false, $noWait = false)
