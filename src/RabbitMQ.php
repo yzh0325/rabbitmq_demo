@@ -21,8 +21,13 @@ class RabbitMQ
 
     /**
      * src constructor.
+     * @param string $host
+     * @param string $port
+     * @param string $user
+     * @param string $password
+     * @param string $vhost
      */
-    public function __construct()
+    public function __construct($host= '',$port = '',$user = '',$password = '',$vhost = '')
     {
         if(function_exists('config')){
             $this->host = config('rabbitmq.host');
@@ -30,6 +35,21 @@ class RabbitMQ
             $this->vhost = config('rabbitmq.vhost');
             $this->user = config('rabbitmq.login');
             $this->password = config('rabbitmq.password');
+        }
+        if($host){
+            $this->host = $host;
+        }
+        if($port){
+            $this->port = $port;
+        }
+        if($user){
+            $this->user = $user;
+        }
+        if($password){
+            $this->password = $password;
+        }
+        if($vhost){
+            $this->vhost = $vhost;
         }
 
         $this->connection = new AMQPStreamConnection($this->host, $this->port, $this->user, $this->password,$this->vhost);
